@@ -12,6 +12,7 @@ extern "C" {
 
 	// Callback function prototypes.
 	int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_DC);
+	zend_object_value php_unicodestring_ustring_clone_object(zval *obj TSRMLS_DC);
 	int php_unicodestring_ustring_compare_objects(zval *a, zval *b TSRMLS_DC);
 	int php_unicodestring_ustring_count_elements(zval *obj, long *count TSRMLS_DC);
 	void php_unicodestring_ustring_object_free_storage(void *object TSRMLS_DC);
@@ -79,6 +80,7 @@ ZEND_END_ARG_INFO()
 static function_entry ustring_functions[] = {
 	PHP_ME(UString, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, __toString, php_unicodestring_ustring_toString_arginfo, ZEND_ACC_PUBLIC)
+	PHP_MALIAS(UString, set, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	{ NULL, NULL, NULL }
 };
 
@@ -123,6 +125,19 @@ int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_
 	return SUCCESS;
 }
 
+zend_object_value php_unicodestring_ustring_clone_object(zval *obj TSRMLS_DC) {
+	assert(Z_TYPE_P(obj) == IS_OBJECT);
+	assert(instanceof_function(Z_OBJCE_P(obj), unicodestring_UString TSRMLS_CC));
+
+	ustring_obj *intern = getIntern(obj);
+	zend_object_value clone = php_unicodestring_ustring_object_new(unicodestring_UString TSRMLS_CC);
+	ustring_obj *cloned = (ustring_obj *) zend_object_store_get_object_by_handle(clone.handle);
+
+	cloned->ustr = new UnicodeString(*intern->ustr);
+
+	return clone;
+}
+
 int php_unicodestring_ustring_compare_objects(zval *a, zval *b TSRMLS_DC) {
 	bool aIsObj = (Z_TYPE_P(a) == IS_OBJECT && instanceof_function(Z_OBJCE_P(a), unicodestring_UString TSRMLS_CC));
 	bool bIsObj = (Z_TYPE_P(b) == IS_OBJECT && instanceof_function(Z_OBJCE_P(b), unicodestring_UString TSRMLS_CC));
@@ -150,6 +165,7 @@ void register_unicodestring_ustring(TSRMLS_C) {
 
 	std::memcpy(&ustring_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	ustring_object_handlers.cast_object = php_unicodestring_ustring_cast_object;
+	ustring_object_handlers.clone_obj = php_unicodestring_ustring_clone_object;
 	ustring_object_handlers.compare_objects = php_unicodestring_ustring_compare_objects;
 	ustring_object_handlers.count_elements = php_unicodestring_ustring_count_elements;
 
