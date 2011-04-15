@@ -13,7 +13,14 @@ extern "C" {
 
 	extern zend_module_entry unicodestring_module_entry;
 #define phpext_unicodestring_ptr &unicodestring_module_entry
+
+	PHP_MINIT_FUNCTION(unicodestring);
+
+	PHP_METHOD(UString, __construct);
+	PHP_METHOD(UString, __toString);
 }
+
+struct ustring_obj;
 
 #endif
 

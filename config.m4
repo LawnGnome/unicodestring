@@ -62,5 +62,5 @@ if test "$PHP_UNICODESTRING" != "no"; then
   PHP_SETUP_ICU(UNICODESTRING_SHARED_LIBADD)
   PHP_SUBST(UNICODESTRING_SHARED_LIBADD)
   PHP_REQUIRE_CXX()
-  PHP_NEW_EXTENSION(unicodestring, unicodestring.cpp, $ext_shared)
+  PHP_NEW_EXTENSION(unicodestring, php_unicodestring.cpp, $ext_shared)
 fi
