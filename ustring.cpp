@@ -7,8 +7,8 @@
 #include <unicode/unistr.h>
 
 extern "C" {
-#	include "ext/spl/spl_exceptions.h"
 #	include "Zend/zend_exceptions.h"
+#	include "Zend/zend_interfaces.h"
 
 	// Callback function prototypes.
 	int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_DC);
@@ -37,7 +37,22 @@ static void ustring_set(ustring_obj *intern, const char *str, int len, const cha
 	UnicodeString tmp(str, len, charset);
 
 	if (tmp.isBogus()) {
-		zend_throw_exception_ex(spl_ce_InvalidArgumentException, 0 TSRMLS_CC, "Invalid input string for charset %s", charset);
+		zval *exception, zvalInput, zvalCharset;
+
+		MAKE_STD_ZVAL(exception);
+		object_init_ex(exception, unicodestring_InvalidInputException);
+
+		INIT_ZVAL(zvalInput);
+		ZVAL_STRINGL(&zvalInput, str, len, 0);
+
+		INIT_ZVAL(zvalCharset);
+		ZVAL_STRING(&zvalCharset, charset, 0);
+
+		zend_call_method_with_2_params(&exception, unicodestring_InvalidInputException, &unicodestring_InvalidInputException->constructor, "__construct", NULL, &zvalInput, &zvalCharset);
+
+		zend_throw_exception_object(exception TSRMLS_CC);
+
+		zend_throw_exception_ex(unicodestring_InvalidInputException, 0 TSRMLS_CC, "Invalid input string for charset %s", charset);
 	}
 
 	UErrorCode err = U_ZERO_ERROR;
@@ -49,7 +64,7 @@ static void ustring_set(ustring_obj *intern, const char *str, int len, const cha
 }
 
 // Class entry and object handlers.
-static zend_class_entry *ustring_entry;
+zend_class_entry *unicodestring_UString;
 static zend_object_handlers ustring_object_handlers;
 
 // Arginfo and method list definitions.
@@ -109,8 +124,8 @@ int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_
 }
 
 int php_unicodestring_ustring_compare_objects(zval *a, zval *b TSRMLS_DC) {
-	bool aIsObj = (Z_TYPE_P(a) == IS_OBJECT && instanceof_function(Z_OBJCE_P(a), ustring_entry TSRMLS_CC));
-	bool bIsObj = (Z_TYPE_P(b) == IS_OBJECT && instanceof_function(Z_OBJCE_P(b), ustring_entry TSRMLS_CC));
+	bool aIsObj = (Z_TYPE_P(a) == IS_OBJECT && instanceof_function(Z_OBJCE_P(a), unicodestring_UString TSRMLS_CC));
+	bool bIsObj = (Z_TYPE_P(b) == IS_OBJECT && instanceof_function(Z_OBJCE_P(b), unicodestring_UString TSRMLS_CC));
 
 	if (aIsObj && bIsObj) {
 		ustring_obj *usa = getIntern(a);
@@ -130,7 +145,7 @@ int php_unicodestring_ustring_count_elements(zval *obj, long *count TSRMLS_DC) {
 }
 
 // Registration function.
-void register_ustring_class_entry(TSRMLS_C) {
+void register_unicodestring_ustring(TSRMLS_C) {
 	zend_class_entry ce;
 
 	std::memcpy(&ustring_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
@@ -140,7 +155,7 @@ void register_ustring_class_entry(TSRMLS_C) {
 
 	INIT_CLASS_ENTRY(ce, "unicodestring\\UString", ustring_functions);
 	ce.create_object = php_unicodestring_ustring_object_new;
-	ustring_entry = zend_register_internal_class(&ce TSRMLS_CC);
+	unicodestring_UString = zend_register_internal_class(&ce TSRMLS_CC);
 }
 
 // Methods.

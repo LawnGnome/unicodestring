@@ -18,7 +18,8 @@ ZEND_GET_MODULE(unicodestring)
 #endif
 
 PHP_MINIT_FUNCTION(unicodestring) {
-	register_ustring_class_entry();
+	register_unicodestring_exceptions();
+	register_unicodestring_ustring();
 
 	return SUCCESS;
 }
