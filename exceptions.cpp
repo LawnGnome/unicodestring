@@ -10,22 +10,33 @@ extern "C" {
 }
 
 zend_class_entry *unicodestring_InvalidInputException;
+zend_class_entry *unicodestring_OutOfRangeException;
+
+static function_entry empty_functions[] = {
+	{ NULL, NULL, NULL }
+};
 
 ZEND_BEGIN_ARG_INFO_EX(unicodestring_InvalidInputException_construct, 0, 0, 1)
 	ZEND_ARG_INFO(0, input)
 	ZEND_ARG_INFO(0, charset)
 ZEND_END_ARG_INFO()
 
+
 static function_entry InvalidInputException_functions[] = {
 	PHP_ME(InvalidInputException, __construct, unicodestring_InvalidInputException_construct, ZEND_ACC_PUBLIC)
 	{ NULL, NULL, NULL }
 };
 
-void register_unicodestring_exceptions(TSRMLS_D) {
+zend_class_entry *register_class(const char *name, function_entry *functions, zend_class_entry *parent TSRMLS_DC) {
 	zend_class_entry ce;
 
-	INIT_CLASS_ENTRY(ce, "unicodestring\\InvalidInputException", InvalidInputException_functions);
-	unicodestring_InvalidInputException = zend_register_internal_class_ex(&ce, spl_ce_InvalidArgumentException, "InvalidArgumentException" TSRMLS_CC);
+	INIT_CLASS_ENTRY(ce, name, functions);
+	return zend_register_internal_class_ex(&ce, parent, parent->name TSRMLS_CC);
+}
+
+void register_unicodestring_exceptions(TSRMLS_D) {
+	unicodestring_InvalidInputException = register_class("unicodestring\\InvalidInputException", InvalidInputException_functions, spl_ce_InvalidArgumentException TSRMLS_CC);
+	unicodestring_OutOfRangeException = register_class("unicodestring\\OutOfRangeException", empty_functions, spl_ce_OutOfRangeException TSRMLS_CC);
 }
 
 PHP_METHOD(InvalidInputException, __construct) {

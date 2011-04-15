@@ -13,6 +13,7 @@ extern "C" {
 
 	// exceptions.cpp
 	extern zend_class_entry *unicodestring_InvalidInputException;
+	extern zend_class_entry *unicodestring_OutOfRangeException;
 
 	PHP_METHOD(InvalidInputException, __construct);
 
@@ -29,6 +30,10 @@ extern "C" {
 
 	PHP_METHOD(UString, __construct);
 	PHP_METHOD(UString, __toString);
+	PHP_METHOD(UString, offsetExists);
+	PHP_METHOD(UString, offsetGet);
+	PHP_METHOD(UString, offsetSet);
+	PHP_METHOD(UString, offsetUnset);
 
 	void register_unicodestring_ustring(TSRMLS_D);
 }

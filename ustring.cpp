@@ -77,9 +77,32 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_toString_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetExists_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetGet_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetSet_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, index)
+	ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetUnset_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
 static function_entry ustring_functions[] = {
 	PHP_ME(UString, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, __toString, php_unicodestring_ustring_toString_arginfo, ZEND_ACC_PUBLIC)
+
+	PHP_ME(UString, offsetExists, php_unicodestring_ustring_offsetExists_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, offsetGet, php_unicodestring_ustring_offsetGet_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, offsetSet, php_unicodestring_ustring_offsetSet_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, offsetUnset, php_unicodestring_ustring_offsetUnset_arginfo, ZEND_ACC_PUBLIC)
+
 	PHP_MALIAS(UString, set, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	{ NULL, NULL, NULL }
 };
@@ -154,7 +177,7 @@ int php_unicodestring_ustring_compare_objects(zval *a, zval *b TSRMLS_DC) {
 
 int php_unicodestring_ustring_count_elements(zval *obj, long *count TSRMLS_DC) {
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
-	*count = intern->ustr->countChar32();
+	*count = intern->ustr->length();
 
 	return SUCCESS;
 }
@@ -172,6 +195,8 @@ void register_unicodestring_ustring(TSRMLS_C) {
 	INIT_CLASS_ENTRY(ce, "unicodestring\\UString", ustring_functions);
 	ce.create_object = php_unicodestring_ustring_object_new;
 	unicodestring_UString = zend_register_internal_class(&ce TSRMLS_CC);
+
+	zend_class_implements(unicodestring_UString TSRMLS_CC, 1, zend_ce_arrayaccess);
 }
 
 // Methods.
@@ -195,6 +220,90 @@ PHP_METHOD(UString, __construct) {
 
 PHP_METHOD(UString, __toString) {
 	php_unicodestring_ustring_cast_object(getThis(), return_value, IS_STRING TSRMLS_CC);
+}
+
+PHP_METHOD(UString, offsetExists) {
+	long index;
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	RETURN_BOOL(index >= 0 && index < intern->ustr->length());
+}
+
+PHP_METHOD(UString, offsetGet) {
+	long index;
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (index >= 0 && index < intern->ustr->length()) {
+		UChar ch = intern->ustr->charAt(index);
+		zval blank;
+
+		INIT_ZVAL(blank);
+		ZVAL_STRING(&blank, "", 0);
+
+		Z_TYPE_P(return_value) = IS_OBJECT;
+		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
+
+		zend_call_method_with_1_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL, &blank);
+		ustring_obj *return_value_intern = getIntern(return_value);
+
+		return_value_intern->ustr->setTo(ch);
+	}
+	else {
+		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+	}
+}
+
+PHP_METHOD(UString, offsetSet) {
+	long index;
+	zval *obj = getThis(), *value;
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lz", &index, &value) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (index >= 0 && index < intern->ustr->length()) {
+		if (Z_TYPE_P(value) == IS_OBJECT && instanceof_function(Z_OBJCE_P(value), unicodestring_UString TSRMLS_CC)) {
+			ustring_obj *value_intern = getIntern(value TSRMLS_CC);
+			intern->ustr->replace(index, 1, value_intern->ustr->charAt(0));
+		}
+		else {
+			convert_to_string(value);
+			UnicodeString ustr(Z_STRVAL_P(value), Z_STRLEN_P(value), "UTF-8");
+
+			intern->ustr->replace(index, 1, ustr.charAt(0));
+		}
+	}
+	else {
+		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+	}
+}
+
+PHP_METHOD(UString, offsetUnset) {
+	long index;
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (index >= 0 && index < intern->ustr->length()) {
+		intern->ustr->remove(index, 1);
+	}
+	else {
+		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+	}
 }
 
 // vim: set ai cin noet ts=8 sw=8:
