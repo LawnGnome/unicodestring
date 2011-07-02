@@ -1,5 +1,4 @@
 PHP_ARG_ENABLE(unicodestring, whether to enable unicodestring support,
-Make sure that the comment is aligned:
 [  --enable-unicodestring           Enable unicodestring support])
 
 if test "$PHP_UNICODESTRING" != "no"; then
