@@ -12,7 +12,7 @@ extern "C" {
 zend_class_entry *unicodestring_InvalidInputException;
 zend_class_entry *unicodestring_OutOfRangeException;
 
-static function_entry empty_functions[] = {
+static zend_function_entry empty_functions[] = {
 	{ NULL, NULL, NULL }
 };
 
@@ -22,12 +22,12 @@ ZEND_BEGIN_ARG_INFO_EX(unicodestring_InvalidInputException_construct, 0, 0, 1)
 ZEND_END_ARG_INFO()
 
 
-static function_entry InvalidInputException_functions[] = {
+static zend_function_entry InvalidInputException_functions[] = {
 	PHP_ME(InvalidInputException, __construct, unicodestring_InvalidInputException_construct, ZEND_ACC_PUBLIC)
 	{ NULL, NULL, NULL }
 };
 
-zend_class_entry *register_class(const char *name, function_entry *functions, zend_class_entry *parent TSRMLS_DC) {
+zend_class_entry *register_class(const char *name, zend_function_entry *functions, zend_class_entry *parent TSRMLS_DC) {
 	zend_class_entry ce;
 
 	INIT_CLASS_ENTRY(ce, name, functions);

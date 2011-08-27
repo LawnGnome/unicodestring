@@ -94,7 +94,7 @@ ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetUnset_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
 
-static function_entry ustring_functions[] = {
+static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, __toString, php_unicodestring_ustring_toString_arginfo, ZEND_ACC_PUBLIC)
 
@@ -126,7 +126,11 @@ zend_object_value php_unicodestring_ustring_object_new(zend_class_entry *type TS
 	intern->ustr = new UnicodeString;
 
 	zend_object_std_init(&intern->zo, type TSRMLS_CC);
+#if PHP_API_VERSION > 20090626
+	object_properties_init(&intern->zo, type);
+#else
 	zend_hash_copy(intern->zo.properties, &type->default_properties, (copy_ctor_func_t) zval_add_ref, &tmp, sizeof(zval *));
+#endif
 
 	retval.handle = zend_objects_store_put(intern, NULL, php_unicodestring_ustring_object_free_storage, NULL TSRMLS_CC);
 	retval.handlers = &ustring_object_handlers;
