@@ -1,5 +1,6 @@
 #include "php_unicodestring.h"
 
+#include <cstring>
 #include <string>
 #include <sstream>
 
@@ -28,10 +29,14 @@ static zend_function_entry InvalidInputException_functions[] = {
 };
 
 zend_class_entry *register_class(const char *name, zend_function_entry *functions, zend_class_entry *parent TSRMLS_DC) {
-	zend_class_entry ce;
+	char *parent_name = strdup(parent->name);
+	zend_class_entry ce, *retval = NULL;
 
 	INIT_CLASS_ENTRY(ce, name, functions);
-	return zend_register_internal_class_ex(&ce, parent, parent->name TSRMLS_CC);
+	retval = zend_register_internal_class_ex(&ce, parent, parent_name TSRMLS_CC);
+	free(parent_name);
+
+	return retval;
 }
 
 void register_unicodestring_exceptions(TSRMLS_D) {
