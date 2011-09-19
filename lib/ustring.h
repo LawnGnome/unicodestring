@@ -55,7 +55,7 @@ class UString {
 		size_t find(const UString &needle) const;
 		size_t length() const { return data.size(); }
 		UString replace(const UString &needle, const UString &replacement) const;
-		void reverse();
+		UString reverse() const;
 		void setCharAt(size_t offset, UChar32 ch);
 		void setCharAt(size_t offset, const UString &src);
 		UString substring(size_t offset) const;

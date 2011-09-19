@@ -123,8 +123,11 @@ UString UString::replace(const UString &needle, const UString &replacement) cons
 	return replaced;
 }
 
-void UString::reverse() {
-	std::reverse(data.begin(), data.end());
+UString UString::reverse() const {
+	UString reversed(*this);
+
+	std::reverse(reversed.data.begin(), reversed.data.end());
+	return reversed;
 }
 
 void UString::setCharAt(size_t offset, UChar32 ch) {
