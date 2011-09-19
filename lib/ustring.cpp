@@ -158,7 +158,9 @@ UString UString::substring(size_t offset, size_t length) const {
 
 	UString us;
 	us.data.reserve(length);
-	std::copy(data.begin() + offset, data.begin() + offset + length, us.data.begin());
+	for (UStringData::const_iterator i = data.begin() + offset; i != data.begin() + offset + length; i++) {
+		us.data.push_back(*i);
+	}
 
 	return us;
 }
