@@ -64,7 +64,7 @@ zend_class_entry *unicodestring_UString;
 static zend_object_handlers ustring_object_handlers;
 
 // Arginfo and method list definitions.
-ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_construct_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_construct_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, string)
 	ZEND_ARG_INFO(0, charset)
 ZEND_END_ARG_INFO()
@@ -203,15 +203,20 @@ PHP_METHOD(UString, __construct) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s", &string, &stringLen, &charset, &charsetLen) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|ss", &string, &stringLen, &charset, &charsetLen) == FAILURE) {
 		RETURN_FALSE;
 	}
 
-	if (charset) {
-		ustring_set(intern, string, stringLen, charset TSRMLS_CC);
+	if (string) {
+		if (charset) {
+			ustring_set(intern, string, stringLen, charset TSRMLS_CC);
+		}
+		else {
+			ustring_set(intern, string, stringLen, "UTF-8" TSRMLS_CC);
+		}
 	}
 	else {
-		ustring_set(intern, string, stringLen, "UTF-8" TSRMLS_CC);
+		ustring_set(intern, "", 0, "UTF-8" TSRMLS_CC);
 	}
 }
 
