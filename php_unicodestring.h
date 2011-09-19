@@ -12,6 +12,7 @@ extern "C" {
 #	include "php.h"
 
 	// exceptions.cpp
+	extern zend_class_entry *unicodestring_InternalException;
 	extern zend_class_entry *unicodestring_InvalidInputException;
 	extern zend_class_entry *unicodestring_OutOfRangeException;
 

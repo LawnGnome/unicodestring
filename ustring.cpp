@@ -3,8 +3,8 @@
 #include <cassert>
 #include <cstring>
 #include <string>
-#include <unicode/normlzr.h>
-#include <unicode/unistr.h>
+
+#include "lib/ustring.h"
 
 extern "C" {
 #	include "Zend/zend_exceptions.h"
@@ -22,7 +22,7 @@ extern "C" {
 // The internal object we're using that encapsulates the UnicodeString.
 struct ustring_obj {
 	zend_object zo;
-	UnicodeString *ustr;
+	UString *ustr;
 };
 
 // Helper function to get the internal object from a zval.
@@ -35,9 +35,9 @@ inline static ustring_obj *getIntern(zval *obj TSRMLS_DC) {
 
 // Helper function to set the UnicodeString in a ustring_obj.
 static void ustring_set(ustring_obj *intern, const char *str, int len, const char *charset TSRMLS_DC) {
-	UnicodeString tmp(str, len, charset);
-
-	if (tmp.isBogus()) {
+	try {
+		intern->ustr = new UString(str, len, charset);
+	} catch (MalformedInput e) {
 		zval *exception, zvalInput, zvalCharset;
 
 		MAKE_STD_ZVAL(exception);
@@ -53,14 +53,9 @@ static void ustring_set(ustring_obj *intern, const char *str, int len, const cha
 
 		zend_throw_exception_object(exception TSRMLS_CC);
 
-		zend_throw_exception_ex(unicodestring_InvalidInputException, 0 TSRMLS_CC, "Invalid input string for charset %s", charset);
-	}
-
-	UErrorCode err = U_ZERO_ERROR;
-	Normalizer::normalize(tmp, UNORM_NFC, 0, *intern->ustr, err);
-
-	if (U_FAILURE(err)) {
-		php_error(E_ERROR, "Error normalising string: %s", u_errorName(err));
+		zend_throw_exception_ex(unicodestring_InvalidInputException, 0 TSRMLS_CC, "%s", e.what());
+	} catch (NormalisationError e) {
+		php_error(E_ERROR, e.what());
 	}
 }
 
@@ -123,7 +118,7 @@ zend_object_value php_unicodestring_ustring_object_new(zend_class_entry *type TS
 	zval *tmp;
 
 	intern = (ustring_obj *) emalloc(sizeof(ustring_obj));
-	intern->ustr = new UnicodeString;
+	intern->ustr = new UString;
 
 	zend_object_std_init(&intern->zo, type TSRMLS_CC);
 #if PHP_API_VERSION > 20090626
@@ -140,12 +135,10 @@ zend_object_value php_unicodestring_ustring_object_new(zend_class_entry *type TS
 
 int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_DC) {
 	ustring_obj *intern = getIntern(src TSRMLS_CC);
-	std::string dest;
-	StringByteSink<std::string> sink(&dest);
+	std::string utf8(intern->ustr->toUTF8());
 
-	intern->ustr->toUTF8(sink);
 	INIT_PZVAL(dst);
-	ZVAL_STRINGL(dst, dest.data(), dest.length(), 1);
+	ZVAL_STRINGL(dst, utf8.c_str(), utf8.size(), 1);
 
 	convert_to_explicit_type(dst, type);
 	
@@ -160,7 +153,7 @@ zend_object_value php_unicodestring_ustring_clone_object(zval *obj TSRMLS_DC) {
 	zend_object_value clone = php_unicodestring_ustring_object_new(unicodestring_UString TSRMLS_CC);
 	ustring_obj *cloned = (ustring_obj *) zend_object_store_get_object_by_handle(clone.handle);
 
-	cloned->ustr = new UnicodeString(*intern->ustr);
+	cloned->ustr = new UString(*intern->ustr);
 
 	return clone;
 }
@@ -173,7 +166,7 @@ int php_unicodestring_ustring_compare_objects(zval *a, zval *b TSRMLS_DC) {
 		ustring_obj *usa = getIntern(a);
 		ustring_obj *usb = getIntern(b);
 
-		return usa->ustr->compareCodePointOrder(*usb->ustr);
+		return usa->ustr->compare(*usb->ustr);
 	}
 
 	return 1;
@@ -247,8 +240,8 @@ PHP_METHOD(UString, offsetGet) {
 		RETURN_FALSE;
 	}
 
-	if (index >= 0 && index < intern->ustr->length()) {
-		UChar ch = intern->ustr->charAt(index);
+	try {
+		UChar32 ch = intern->ustr->charAt(index);
 		zval blank;
 
 		INIT_ZVAL(blank);
@@ -260,10 +253,13 @@ PHP_METHOD(UString, offsetGet) {
 		zend_call_method_with_1_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL, &blank);
 		ustring_obj *return_value_intern = getIntern(return_value);
 
-		return_value_intern->ustr->setTo(ch);
-	}
-	else {
+		return_value_intern->ustr->set(&ch, 1);
+	} catch (std::out_of_range e) {
 		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+	} catch (MalformedInput e) {
+		zend_throw_exception_ex(unicodestring_InternalException, 0 TSRMLS_CC, "%s", e.what());
+	} catch (NormalisationError e) {
+		zend_throw_exception_ex(unicodestring_InternalException, 0 TSRMLS_CC, "%s", e.what());
 	}
 }
 
@@ -279,13 +275,13 @@ PHP_METHOD(UString, offsetSet) {
 	if (index >= 0 && index < intern->ustr->length()) {
 		if (Z_TYPE_P(value) == IS_OBJECT && instanceof_function(Z_OBJCE_P(value), unicodestring_UString TSRMLS_CC)) {
 			ustring_obj *value_intern = getIntern(value TSRMLS_CC);
-			intern->ustr->replace(index, 1, value_intern->ustr->charAt(0));
+			intern->ustr->setCharAt(index, *(value_intern->ustr));
 		}
 		else {
 			convert_to_string(value);
-			UnicodeString ustr(Z_STRVAL_P(value), Z_STRLEN_P(value), "UTF-8");
+			UString us(Z_STRVAL_P(value), Z_STRLEN_P(value), "UTF-8");
 
-			intern->ustr->replace(index, 1, ustr.charAt(0));
+			intern->ustr->setCharAt(index, us);
 		}
 	}
 	else {
@@ -303,7 +299,7 @@ PHP_METHOD(UString, offsetUnset) {
 	}
 
 	if (index >= 0 && index < intern->ustr->length()) {
-		intern->ustr->remove(index, 1);
+		intern->ustr->remove(index);
 	}
 	else {
 		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);

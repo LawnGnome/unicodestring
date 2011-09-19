@@ -10,6 +10,7 @@ extern "C" {
 #	include "Zend/zend_interfaces.h"
 }
 
+zend_class_entry *unicodestring_InternalException;
 zend_class_entry *unicodestring_InvalidInputException;
 zend_class_entry *unicodestring_OutOfRangeException;
 
@@ -40,6 +41,7 @@ zend_class_entry *register_class(const char *name, zend_function_entry *function
 }
 
 void register_unicodestring_exceptions(TSRMLS_D) {
+	unicodestring_InternalException = register_class("unicodestring\\InternalException", empty_functions, spl_ce_RuntimeException);
 	unicodestring_InvalidInputException = register_class("unicodestring\\InvalidInputException", InvalidInputException_functions, spl_ce_InvalidArgumentException TSRMLS_CC);
 	unicodestring_OutOfRangeException = register_class("unicodestring\\OutOfRangeException", empty_functions, spl_ce_OutOfRangeException TSRMLS_CC);
 }
