@@ -7,23 +7,7 @@
 
 #include <unicode/normlzr.h>
 
-UString::UString() {}
-
-UString::UString(const UString &us) : data(us.data) {}
-
-UString::UString(const char *buffer, size_t length, const char *charset) {
-	assert(buffer != NULL);
-	assert(charset != NULL);
-
-	UnicodeString us(buffer, length, charset);
-
-	if (us.isBogus()) {
-		std::ostringstream message;
-		message << "Invalid input string for charset "
-			<< charset;
-		throw MalformedInput(message);
-	}
-
+UnicodeString normalise(const UnicodeString &us) {
 	UnicodeString norm;
 	UErrorCode err = U_ZERO_ERROR;
 	Normalizer::normalize(us, UNORM_NFC, 0, norm, err);
@@ -35,7 +19,19 @@ UString::UString(const char *buffer, size_t length, const char *charset) {
 		throw NormalisationError(message);
 	}
 
-	setData(norm);
+	return norm;
+}
+
+UString::UString() {}
+
+UString::UString(const UString &us) : data(us.data) {}
+
+UString::UString(const char *buffer, size_t length, const char *charset) {
+	set(buffer, length, charset);
+}
+
+UString::UString(const UChar32 *buffer, size_t length) {
+	set(buffer, length);
 }
 
 UString &UString::operator=(const UString &src) {
@@ -128,6 +124,28 @@ UString UString::reverse() const {
 
 	std::reverse(reversed.data.begin(), reversed.data.end());
 	return reversed;
+}
+
+void UString::set(const char *buffer, size_t length, const char *charset) {
+	assert(buffer != NULL);
+	assert(charset != NULL);
+
+	UnicodeString us(buffer, length, charset);
+
+	if (us.isBogus()) {
+		std::ostringstream message;
+		message << "Invalid input string for charset "
+			<< charset;
+		throw MalformedInput(message);
+	}
+
+	setData(normalise(us));
+}
+
+void UString::set(const UChar32 *buffer, size_t length) {
+	assert(buffer != NULL);
+
+	setData(normalise(UnicodeString::fromUTF32(buffer, length)));
 }
 
 void UString::setCharAt(size_t offset, const UString &src) {

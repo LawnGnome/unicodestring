@@ -40,6 +40,7 @@ class UString {
 		UString();
 		UString(const UString &us);
 		UString(const char *buffer, size_t length, const char *charset);
+		UString(const UChar32 *buffer, size_t length);
 
 		UString &operator=(const UString &src);
 		bool operator<(const UString &other) const;
@@ -56,6 +57,8 @@ class UString {
 		size_t length() const { return data.size(); }
 		UString replace(const UString &needle, const UString &replacement) const;
 		UString reverse() const;
+		void set(const char *buffer, size_t length, const char *charset);
+		void set(const UChar32 *buffer, size_t length);
 		void setCharAt(size_t offset, const UString &src);
 		UString substring(size_t offset) const;
 		UString substring(size_t offset, size_t length) const;
