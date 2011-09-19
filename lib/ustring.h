@@ -43,8 +43,11 @@ class UString {
 
 		UString &operator=(const UString &src);
 		bool operator<(const UString &other) const;
+		bool operator<=(const UString &other) const;
 		bool operator>(const UString &other) const;
+		bool operator>=(const UString &other) const;
 		bool operator==(const UString &other) const;
+		bool operator!=(const UString &other) const;
 
 		UChar32 charAt(size_t offset) const;
 		short compare(const UString &other) const;

@@ -47,12 +47,24 @@ bool UString::operator<(const UString &other) const {
 	return (compare(other) == -1);
 }
 
+bool UString::operator<=(const UString &other) const {
+	return (compare(other) != 1);
+}
+
 bool UString::operator>(const UString &other) const {
 	return (compare(other) == 1);
 }
 
+bool UString::operator>=(const UString &other) const {
+	return (compare(other) != -1);
+}
+
 bool UString::operator==(const UString &other) const {
 	return (compare(other) == 0);
+}
+
+bool UString::operator!=(const UString &other) const {
+	return (compare(other) != 0);
 }
 
 UChar32 UString::charAt(size_t offset) const {
