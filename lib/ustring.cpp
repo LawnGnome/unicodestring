@@ -130,17 +130,13 @@ UString UString::reverse() const {
 	return reversed;
 }
 
-void UString::setCharAt(size_t offset, UChar32 ch) {
-	if (offset >= data.size()) {
-		throw std::out_of_range("Offset is out of range");
+void UString::setCharAt(size_t offset, const UString &src) {
+	if (data.size() <= offset) {
+		throw std::out_of_range("Offset out of range");
 	}
 
-	data[offset] = ch;
-}
-
-void UString::setCharAt(size_t offset, const UString &src) {
 	try {
-		setCharAt(offset, src.charAt(0));
+		data[offset] = src.charAt(0);
 	} catch (std::out_of_range e) {
 		throw std::invalid_argument("Source string must have at least one character");
 	}
