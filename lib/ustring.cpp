@@ -107,12 +107,18 @@ UString UString::replace(const UString &needle, const UString &replacement) cons
 	UStringData::const_iterator it = data.begin(), prev = data.begin();
 
 	while (data.end() != (it = std::search(prev, data.end(), needle.data.begin(), needle.data.end()))) {
-		std::copy(prev, it, replaced.data.end());
-		std::copy(replacement.data.begin(), replacement.data.end(), replaced.data.end());
-		prev = it + replacement.data.size();
+		for (UStringData::const_iterator i = prev; i != it; i++) {
+			replaced.data.push_back(*i);
+		}
+		for (UStringData::const_iterator i = replacement.data.begin(); i != replacement.data.end(); i++) {
+			replaced.data.push_back(*i);
+		}
+		prev = it + needle.data.size();
 	}
 
-	std::copy(prev, it, replaced.data.end());
+	for (UStringData::const_iterator i = prev; i != it; i++) {
+		replaced.data.push_back(*i);
+	}
 
 	return replaced;
 }
