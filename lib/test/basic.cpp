@@ -142,6 +142,17 @@ class LengthTest : public Test {
 		}
 };
 
+class RemoveTest : public Test {
+	public:
+		void run(TestRunner &runner) {
+			UString us("foo", 3, "ISO-8859-1");
+
+			us.remove(0);
+			ASSERT_USTRING(runner, "oo", us, "Remove first character");
+			ASSERT_EXCEPTION(runner, std::out_of_range, us.remove(2), "Remove out of range");
+		}
+};
+
 class ReplaceTest : public Test {
 	public:
 		void run(TestRunner &runner) {
@@ -226,6 +237,7 @@ int main() {
 	CodepointCountTest().run(runner);
 	FindTest().run(runner);
 	LengthTest().run(runner);
+	RemoveTest().run(runner);
 	ReplaceTest().run(runner);
 	ReverseTest().run(runner);
 	SetCharAtTest().run(runner);

@@ -56,6 +56,7 @@ class UString {
 		size_t find(const UString &needle) const;
 		size_t length() const { return data.size(); }
 		UString replace(const UString &needle, const UString &replacement) const;
+		void remove(size_t offset);
 		UString reverse() const;
 		void set(const char *buffer, size_t length, const char *charset);
 		void set(const UChar32 *buffer, size_t length);

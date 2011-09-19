@@ -98,6 +98,24 @@ size_t UString::find(const UString &needle) const {
 	return pos - data.begin();
 }
 
+void UString::remove(size_t offset) {
+	if (offset >= data.size()) {
+		throw std::out_of_range("Offset out of range");
+	}
+
+	// You really wouldn't want to do this often.
+	UStringData newData;
+
+	newData.reserve(data.size() - 1);
+	for (UStringData::const_iterator i = data.begin(); i != data.end(); i++) {
+		if (((size_t) (i - data.begin())) != offset) {
+			newData.push_back(*i);
+		}
+	}
+
+	data = newData;
+}
+
 UString UString::replace(const UString &needle, const UString &replacement) const {
 	UString replaced;
 	UStringData::const_iterator it = data.begin(), prev = data.begin();
