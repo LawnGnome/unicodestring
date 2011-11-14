@@ -305,7 +305,11 @@ PHP_METHOD(UString, htmlspecialchars) {
 	try {
 		std::string utf8(intern->ustr->toUTF8());
 		unsigned char *utf8Buffer = (unsigned char *) estrndup(utf8.c_str(), utf8.size());
+#if PHP_API_VERSION > 20090626
 		size_t outputSize = 0;
+#else
+		int outputSize = 0;
+#endif
 		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, 0, flags, "UTF-8", 0 TSRMLS_CC);
 
 		Z_TYPE_P(return_value) = IS_OBJECT;
