@@ -250,10 +250,6 @@ UString UString::toUpper() const {
 	return us;
 }
 
-std::string UString::toUTF8() const {
-	return toEncoding("UTF-8");
-}
-
 void UString::setData(const UnicodeString &us) {
 	int32_t bufferLength = us.countChar32();
 	UChar32 *buffer = new UChar32[bufferLength];

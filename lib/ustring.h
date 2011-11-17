@@ -72,7 +72,7 @@ class UString {
 		std::string toEncoding(const char *encoding) const;
 		UString toLower() const;
 		UString toUpper() const;
-		std::string toUTF8() const;
+		std::string toUTF8() const { return toEncoding("UTF-8"); }
 
 	private:
 		typedef std::vector<UChar32> UStringData;
