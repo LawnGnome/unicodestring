@@ -76,6 +76,9 @@ ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_encode_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, charset)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_length_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetExists_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
@@ -104,6 +107,7 @@ static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, __toString, php_unicodestring_ustring_toString_arginfo, ZEND_ACC_PUBLIC)
 
 	PHP_ME(UString, encode, php_unicodestring_ustring_encode_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, length, php_unicodestring_ustring_length_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetExists, php_unicodestring_ustring_offsetExists_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetGet, php_unicodestring_ustring_offsetGet_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetSet, php_unicodestring_ustring_offsetSet_arginfo, ZEND_ACC_PUBLIC)
@@ -255,10 +259,17 @@ PHP_METHOD(UString, encode) {
 
 	try {
 		std::string encoded(intern->ustr->toEncoding(charset));
-		ZVAL_STRINGL(return_value, encoded.c_str(), encoded.size(), 1);
+		RETURN_STRINGL(encoded.c_str(), encoded.size(), 1);
 	} catch (ConversionError e) {
 		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, "Error converting string to charset %s: %s", charset, e.what());
 	}
+}
+
+PHP_METHOD(UString, length) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+
+	RETURN_LONG(intern->ustr->length());
 }
 
 PHP_METHOD(UString, offsetExists) {
