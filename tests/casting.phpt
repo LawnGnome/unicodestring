@@ -1,9 +1,9 @@
 --TEST--
 Basic UnicodeString casting behaviour
+--SKIPIF--
+<?php if (!extension_loaded('unicodestring')) die('skip unicodestring must be loaded');
 --FILE--
 <?php
-var_dump(extension_loaded('unicodestring'));
-
 $us = new unicodestring\UString;
 var_dump($us, count($us), (int) $us, (boolean) $us);
 
@@ -13,7 +13,6 @@ var_dump($us, count($us), (string) $us);
 $us = new unicodestring\UString('1.1');
 var_dump((integer) $us, (float) $us);
 --EXPECTF--
-bool(true)
 object(unicodestring\UString)#%d (0) {
 }
 int(0)
