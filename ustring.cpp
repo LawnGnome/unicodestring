@@ -253,20 +253,20 @@ PHP_METHOD(UString, __toString) {
 	php_unicodestring_ustring_cast_object(getThis(), return_value, IS_STRING TSRMLS_CC);
 }
 
-PHP_METHOD(UString, encode) {
+PHP_METHOD(UString, chr) {
 	long codepoint = 0;
-	uint32_t cp32;
+	UChar32 cp32;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &codepoint) == FAILURE) {
 		RETURN_FALSE;
 	}
 
-	cp32 = (uint32_t) codepoint;
+	cp32 = (UChar32) codepoint;
 	Z_TYPE_P(return_value) = IS_OBJECT;
 	object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
 
 	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
-	*(getIntern(return_value)->ustr) = intern->ustr->set(&cp32, 1);
+	getIntern(return_value)->ustr->set(&cp32, 1);
 }
 
 PHP_METHOD(UString, encode) {
