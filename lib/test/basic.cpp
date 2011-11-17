@@ -10,7 +10,7 @@
 	{ \
 		std::ostringstream ss; \
 		ss << (message) << " at " __FILE__ ":" << __LINE__ \
-			<< " in " << __func__; \
+			<< " in " << __PRETTY_FUNCTION__; \
 		(runner).assert((expected), (value), ss.str().c_str()); \
 	}
 
