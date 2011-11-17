@@ -15,6 +15,12 @@ class ICUError : public std::runtime_error {
 		ICUError(const std::string &what) : std::runtime_error(what) {}
 };
 
+class ConversionError : public ICUError {
+	public:
+		ConversionError(const std::ostringstream &ss) : ICUError(ss) {}
+		ConversionError(const std::string &what) : ICUError(what) {}
+};
+
 class MalformedInput : public ICUError {
 	public:
 		MalformedInput(const std::ostringstream &ss) : ICUError(ss) {}
@@ -63,6 +69,7 @@ class UString {
 		void setCharAt(size_t offset, const UString &src);
 		UString substring(size_t offset) const;
 		UString substring(size_t offset, size_t length) const;
+		std::string toEncoding(const char *encoding) const;
 		UString toLower() const;
 		UString toUpper() const;
 		std::string toUTF8() const;

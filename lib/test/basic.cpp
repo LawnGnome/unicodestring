@@ -205,6 +205,16 @@ class SubstringTest : public Test {
 		}
 };
 
+class ToEncodingTest : public Test {
+	public:
+		void run(TestRunner &runner) {
+			UString us("f\xf5o", 3, "ISO-8859-1");
+
+			ASSERT(runner, "f\xf5o", us.toEncoding("ISO-8859-1"), "Basic toEncoding: ISO-8859-1");
+			ASSERT(runner, "f\xc3\xb5o", us.toEncoding("UTF-8"), "Basic toEncoding: UTF-8");
+		}
+};
+
 class ToLowerUpperTest : public Test {
 	public:
 		void run(TestRunner &runner) {
@@ -242,6 +252,7 @@ int main() {
 	ReverseTest().run(runner);
 	SetCharAtTest().run(runner);
 	SubstringTest().run(runner);
+	ToEncodingTest().run(runner);
 	ToLowerUpperTest().run(runner);
 	ToUTF8Test().run(runner);
 

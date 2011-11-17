@@ -6,6 +6,14 @@
 #include <string>
 
 #include <unicode/normlzr.h>
+#include <unicode/ucnv.h>
+
+#define THROW_UERROR(exception, prefix, err) \
+	{ \
+		std::ostringstream message; \
+		message << (prefix) << u_errorName(err); \
+		throw exception(message); \
+	}
 
 UnicodeString normalise(const UnicodeString &us) {
 	UnicodeString norm;
@@ -13,10 +21,7 @@ UnicodeString normalise(const UnicodeString &us) {
 	Normalizer::normalize(us, UNORM_NFC, 0, norm, err);
 
 	if (U_FAILURE(err)) {
-		std::ostringstream message;
-		message << "Error normalising string: "
-			<< u_errorName(err);
-		throw NormalisationError(message);
+		THROW_UERROR(NormalisationError, "Error normalising string: ", err);
 	}
 
 	return norm;
@@ -201,6 +206,36 @@ UString UString::substring(size_t offset, size_t length) const {
 	return us;
 }
 
+std::string UString::toEncoding(const char *encoding) const {
+	char *output;
+	size_t outputSize;
+	std::string result;
+	UnicodeString us(UnicodeString::fromUTF32(data.data(), data.size()));
+	UConverter *converter;
+	UErrorCode err = U_ZERO_ERROR;
+
+	if ((converter = ucnv_open(encoding, &err)) == NULL) {
+		THROW_UERROR(ConversionError, "Error creating output converter: ", err);
+	}
+
+	outputSize = UCNV_GET_MAX_BYTES_FOR_STRING(us.length(), ucnv_getMaxCharSize(converter));
+	output = new char[outputSize];
+
+	outputSize = ucnv_fromUChars(converter, output, outputSize, us.getBuffer(), us.length(), &err);
+	if (U_FAILURE(err)) {
+		delete[] output;
+		ucnv_close(converter);
+		THROW_UERROR(ConversionError, "Error converting string: ", err);
+	}
+
+	result.assign(output, outputSize);
+
+	delete[] output;
+	ucnv_close(converter);
+
+	return result;
+}
+
 UString UString::toLower() const {
 	UString us;
 
@@ -216,13 +251,7 @@ UString UString::toUpper() const {
 }
 
 std::string UString::toUTF8() const {
-	/* This is a pretty naive implementation: we can and should cache this
-	 * within the object until the string actually changes. */
-	std::string dest;
-	StringByteSink<std::string> sink(&dest);
-
-	UnicodeString::fromUTF32(data.data(), data.size()).toUTF8(sink);
-	return dest;
+	return toEncoding("UTF-8");
 }
 
 void UString::setData(const UnicodeString &us) {
