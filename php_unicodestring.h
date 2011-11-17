@@ -32,6 +32,7 @@ extern "C" {
 
 	PHP_METHOD(UString, __construct);
 	PHP_METHOD(UString, __toString);
+	PHP_METHOD(UString, encode);
 	PHP_METHOD(UString, offsetExists);
 	PHP_METHOD(UString, offsetGet);
 	PHP_METHOD(UString, offsetSet);
