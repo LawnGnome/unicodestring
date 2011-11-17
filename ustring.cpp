@@ -116,6 +116,7 @@ static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, toUpper, php_unicodestring_ustring_toUpper_arginfo, ZEND_ACC_PUBLIC)
 
 	PHP_MALIAS(UString, set, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
+	PHP_MALIAS(UString, strlen, length, php_unicodestring_ustring_length_arginfo, ZEND_ACC_PUBLIC)
 	{ NULL, NULL, NULL }
 };
 
