@@ -1,15 +1,13 @@
 --TEST--
-UnicodeString::toLower() and UnicodeString::toUpper()
+UnicodeString::toLower()
 --SKIPIF--
 <?php if (!extension_loaded('unicodestring')) die('skip unicodestring must be loaded');
 --FILE--
 <?php
 $us = new unicodestring\UString("F\xf5o", 'ISO-8859-1');
 $lower = $us->toLower();
-$upper = $us->toUpper();
 
-var_dump((string) $us, (string) $lower, (string) $upper);
+var_dump((string) $us, (string) $lower);
 --EXPECT--
 string(4) "Fõo"
 string(4) "fõo"
-string(4) "FÕO"
