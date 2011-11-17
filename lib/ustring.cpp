@@ -234,6 +234,7 @@ void UString::setData(const UnicodeString &us) {
 
 	if (U_FAILURE(err)) {
 		std::ostringstream message;
+		delete[] buffer;
 		message << "Error converting UnicodeString to UTF-32 buffer: "
 			<< u_errorName(err);
 		throw ICUError(message);
@@ -245,4 +246,6 @@ void UString::setData(const UnicodeString &us) {
 	for (int32_t i = 0; i < bufferLength; i++) {
 		data.push_back(buffer[i]);
 	}
+
+	delete[] buffer;
 }
