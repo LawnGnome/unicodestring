@@ -34,7 +34,7 @@ zend_class_entry *register_class(const char *name, zend_function_entry *function
 	char *parent_name = strdup(parent->name);
 	zend_class_entry ce, *retval = NULL;
 
-	INIT_CLASS_ENTRY(ce, name, functions);
+	INIT_CLASS_ENTRY_EX(ce, name, strlen(name), functions);
 	retval = zend_register_internal_class_ex(&ce, parent, parent_name TSRMLS_CC);
 	free(parent_name);
 
