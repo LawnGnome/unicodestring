@@ -135,7 +135,13 @@ zend_object_value php_unicodestring_ustring_object_new(zend_class_entry *type TS
 
 int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_DC) {
 	ustring_obj *intern = getIntern(src TSRMLS_CC);
-	std::string utf8(intern->ustr->toUTF8());
+	std::string utf8;
+
+	try {
+		utf8 = intern->ustr->toUTF8();
+	} catch (ConversionError e) {
+		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, "%s", e.what());
+	}
 
 	INIT_PZVAL(dst);
 	ZVAL_STRINGL(dst, utf8.c_str(), utf8.size(), 1);
