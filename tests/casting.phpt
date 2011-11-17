@@ -1,5 +1,5 @@
 --TEST--
-Basic UnicodeString loading
+Basic UnicodeString casting behaviour
 --FILE--
 <?php
 var_dump(extension_loaded('unicodestring'));

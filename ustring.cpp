@@ -92,6 +92,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_toLower_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_toUpper_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, __toString, php_unicodestring_ustring_toString_arginfo, ZEND_ACC_PUBLIC)
@@ -101,6 +104,7 @@ static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, offsetSet, php_unicodestring_ustring_offsetSet_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetUnset, php_unicodestring_ustring_offsetUnset_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, toLower, php_unicodestring_ustring_toLower_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, toUpper, php_unicodestring_ustring_toUpper_arginfo, ZEND_ACC_PUBLIC)
 
 	PHP_MALIAS(UString, set, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	{ NULL, NULL, NULL }
@@ -330,6 +334,17 @@ PHP_METHOD(UString, toLower) {
 
 	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
 	*(getIntern(return_value)->ustr) = intern->ustr->toLower();
+}
+
+PHP_METHOD(UString, toUpper) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+
+	Z_TYPE_P(return_value) = IS_OBJECT;
+	object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
+
+	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
+	*(getIntern(return_value)->ustr) = intern->ustr->toUpper();
 }
 
 // vim: set ai cin noet ts=8 sw=8:

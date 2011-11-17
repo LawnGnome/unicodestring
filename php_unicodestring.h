@@ -37,6 +37,7 @@ extern "C" {
 	PHP_METHOD(UString, offsetSet);
 	PHP_METHOD(UString, offsetUnset);
 	PHP_METHOD(UString, toLower);
+	PHP_METHOD(UString, toUpper);
 
 	void register_unicodestring_ustring(TSRMLS_D);
 }
