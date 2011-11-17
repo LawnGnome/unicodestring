@@ -72,6 +72,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_toString_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_chr_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, codepoint)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_encode_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, charset)
 ZEND_END_ARG_INFO()
@@ -106,6 +110,7 @@ static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, __toString, php_unicodestring_ustring_toString_arginfo, ZEND_ACC_PUBLIC)
 
+	PHP_ME(UString, chr, php_unicodestring_ustring_chr_arginfo, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
 	PHP_ME(UString, encode, php_unicodestring_ustring_encode_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, length, php_unicodestring_ustring_length_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetExists, php_unicodestring_ustring_offsetExists_arginfo, ZEND_ACC_PUBLIC)
@@ -246,6 +251,22 @@ PHP_METHOD(UString, __construct) {
 
 PHP_METHOD(UString, __toString) {
 	php_unicodestring_ustring_cast_object(getThis(), return_value, IS_STRING TSRMLS_CC);
+}
+
+PHP_METHOD(UString, encode) {
+	long codepoint = 0;
+	uint32_t cp32;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &codepoint) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	cp32 = (uint32_t) codepoint;
+	Z_TYPE_P(return_value) = IS_OBJECT;
+	object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
+
+	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
+	*(getIntern(return_value)->ustr) = intern->ustr->set(&cp32, 1);
 }
 
 PHP_METHOD(UString, encode) {
