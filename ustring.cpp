@@ -198,8 +198,8 @@ void register_unicodestring_ustring(TSRMLS_C) {
 
 // Methods.
 PHP_METHOD(UString, __construct) {
-	char *string, *charset = NULL;
-	int stringLen, charsetLen;
+	char *string = NULL, *charset = NULL;
+	int stringLen = 0, charsetLen = 0;
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 
