@@ -13,12 +13,20 @@ var_dump($us, count($us), (string) $us);
 $us = new unicodestring\UString('1.1');
 var_dump((integer) $us, (float) $us);
 --EXPECTF--
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(0) ""
+  ["length"]=>
+  int(0)
 }
 int(0)
 int(0)
 bool(false)
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(3) "foo"
+  ["length"]=>
+  int(3)
 }
 int(3)
 string(3) "foo"

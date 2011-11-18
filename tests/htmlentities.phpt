@@ -6,22 +6,31 @@ UnicodeString::htmlentities()
 <?php
 $us = new unicodestring\UString("Foo");
 $spec = $us->htmlentities();
-var_dump($spec, (string) $spec);
+var_dump($spec);
 
 $us = new unicodestring\UString("Foo&\"'é");
 $spec = $us->htmlentities();
-var_dump($spec, (string) $spec);
+var_dump($spec);
 
 $us = new unicodestring\UString("Foo&\"'é");
 $spec = $us->htmlentities(ENT_QUOTES);
-var_dump($spec, (string) $spec);
+var_dump($spec);
 --EXPECTF--
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(3) "Foo"
+  ["length"]=>
+  int(3)
 }
-string(3) "Foo"
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(23) "Foo&amp;&quot;'&eacute;"
+  ["length"]=>
+  int(23)
 }
-string(23) "Foo&amp;&quot;'&eacute;"
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(28) "Foo&amp;&quot;&#039;&eacute;"
+  ["length"]=>
+  int(28)
 }
-string(28) "Foo&amp;&quot;&#039;&eacute;"

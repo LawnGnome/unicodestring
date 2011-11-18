@@ -6,22 +6,31 @@ UnicodeString::htmlspecialchars_decode()
 <?php
 $us = new unicodestring\UString("Foo");
 $spec = $us->htmlspecialchars_decode();
-var_dump($spec, (string) $spec);
+var_dump($spec);
 
 $us = new unicodestring\UString("Foo&amp;&quot;&#039;&eacute;");
 $spec = $us->htmlspecialchars_decode();
-var_dump($spec, (string) $spec);
+var_dump($spec);
 
 $us = new unicodestring\UString("Foo&amp;&quot;&#039;&eacute;");
 $spec = $us->htmlspecialchars_decode(ENT_QUOTES);
-var_dump($spec, (string) $spec);
+var_dump($spec);
 --EXPECTF--
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(3) "Foo"
+  ["length"]=>
+  int(3)
 }
-string(3) "Foo"
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(19) "Foo&"&#039;&eacute;"
+  ["length"]=>
+  int(19)
 }
-string(19) "Foo&"&#039;&eacute;"
-object(unicodestring\UString)#%d (0) {
+object(unicodestring\UString)#%d (2) {
+  ["string"]=>
+  string(14) "Foo&"'&eacute;"
+  ["length"]=>
+  int(14)
 }
-string(14) "Foo&"'&eacute;"

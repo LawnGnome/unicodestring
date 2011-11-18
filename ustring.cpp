@@ -16,6 +16,7 @@ extern "C" {
 	zend_object_value php_unicodestring_ustring_clone_object(zval *obj TSRMLS_DC);
 	int php_unicodestring_ustring_compare_objects(zval *a, zval *b TSRMLS_DC);
 	int php_unicodestring_ustring_count_elements(zval *obj, long *count TSRMLS_DC);
+	HashTable *php_unicodestring_ustring_get_properties(zval *obj TSRMLS_DC);
 	void php_unicodestring_ustring_object_free_storage(void *object TSRMLS_DC);
 	zend_object_value php_unicodestring_ustring_object_new(zend_class_entry *type TSRMLS_DC);
 }
@@ -228,6 +229,25 @@ int php_unicodestring_ustring_count_elements(zval *obj, long *count TSRMLS_DC) {
 	return SUCCESS;
 }
 
+HashTable *php_unicodestring_ustring_get_properties(zval *obj TSRMLS_DC) {
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+	HashTable *props;
+	zval *temp;
+
+	props = zend_std_get_properties(obj TSRMLS_CC);
+
+	std::string utf8(intern->ustr->toUTF8());
+	MAKE_STD_ZVAL(temp);
+	ZVAL_STRINGL(temp, utf8.c_str(), utf8.size(), 1);
+	zend_hash_update(props, "string", sizeof("string"), &temp, sizeof(zval), NULL);
+
+	MAKE_STD_ZVAL(temp);
+	ZVAL_LONG(temp, intern->ustr->length());
+	zend_hash_update(props, "length", sizeof("length"), &temp, sizeof(zval), NULL);
+
+	return props;
+}
+
 // Registration function.
 void register_unicodestring_ustring(TSRMLS_C) {
 	zend_class_entry ce;
@@ -237,6 +257,7 @@ void register_unicodestring_ustring(TSRMLS_C) {
 	ustring_object_handlers.clone_obj = php_unicodestring_ustring_clone_object;
 	ustring_object_handlers.compare_objects = php_unicodestring_ustring_compare_objects;
 	ustring_object_handlers.count_elements = php_unicodestring_ustring_count_elements;
+	ustring_object_handlers.get_properties = php_unicodestring_ustring_get_properties;
 
 	INIT_CLASS_ENTRY(ce, "unicodestring\\UString", ustring_functions);
 	ce.create_object = php_unicodestring_ustring_object_new;
