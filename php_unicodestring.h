@@ -45,6 +45,7 @@ extern "C" {
 	PHP_METHOD(UString, offsetGet);
 	PHP_METHOD(UString, offsetSet);
 	PHP_METHOD(UString, offsetUnset);
+	PHP_METHOD(UString, replace);
 	PHP_METHOD(UString, rtrim);
 	PHP_METHOD(UString, toLower);
 	PHP_METHOD(UString, toUpper);

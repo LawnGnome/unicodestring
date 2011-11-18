@@ -169,6 +169,11 @@ ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetUnset_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_replace_arginfo, 0, 0, 2)
+	ZEND_ARG_INFO(0, search)
+	ZEND_ARG_INFO(0, replace)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_rtrim_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, charlist)
 ZEND_END_ARG_INFO()
@@ -200,6 +205,7 @@ static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, offsetGet, php_unicodestring_ustring_offsetGet_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetSet, php_unicodestring_ustring_offsetSet_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetUnset, php_unicodestring_ustring_offsetUnset_arginfo, ZEND_ACC_PUBLIC)
+	//PHP_ME(UString, replace, php_unicodestring_ustring_replace_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, rtrim, php_unicodestring_ustring_rtrim_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, toLower, php_unicodestring_ustring_toLower_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, toUpper, php_unicodestring_ustring_toUpper_arginfo, ZEND_ACC_PUBLIC)
@@ -668,6 +674,39 @@ PHP_METHOD(UString, offsetUnset) {
 	else {
 		char format[] = "Index %d is out of range";
 		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, format, index);
+	}
+}
+
+PHP_METHOD(UString, replace) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+	zval *search, *replace;
+	UString replaced(*(intern->ustr));
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &search, &replace) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (Z_TYPE_P(search) == IS_ARRAY && Z_TYPE_P(replace) == IS_ARRAY) {
+		php_error(E_WARNING, "Search and replace arrays must have the same number of elements");
+		RETURN_FALSE;
+	}
+
+	if (Z_TYPE_P(search) == IS_ARRAY) {
+	} else {
+		UString needle, replacement;
+
+		if (!ustring_parse_stringy_zval(search, needle TSRMLS_CC)) {
+			php_error(E_WARNING, "Search must be a string or UString object");
+			RETURN_FALSE;
+		}
+
+		if (!ustring_parse_stringy_zval(replace, replacement TSRMLS_CC)) {
+			php_error(E_WARNING, "Replace must be a string or UString object");
+			RETURN_FALSE;
+		}
+
+
 	}
 }
 
