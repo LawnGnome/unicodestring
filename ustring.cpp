@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 #include <string>
 
 #include "lib/ustring.h"
@@ -147,6 +148,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_length_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_ltrim_arginfo, 0, 0, 0)
+	ZEND_ARG_INFO(0, charlist)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetExists_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
@@ -164,10 +169,18 @@ ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_offsetUnset_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_rtrim_arginfo, 0, 0, 0)
+	ZEND_ARG_INFO(0, charlist)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_toLower_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_toUpper_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_trim_arginfo, 0, 0, 0)
+	ZEND_ARG_INFO(0, charlist)
 ZEND_END_ARG_INFO()
 
 static zend_function_entry ustring_functions[] = {
@@ -182,12 +195,15 @@ static zend_function_entry ustring_functions[] = {
 	PHP_ME(UString, html_entity_decode, php_unicodestring_ustring_html_entity_decode_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, htmlspecialchars_decode, php_unicodestring_ustring_htmlspecialchars_decode_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, length, php_unicodestring_ustring_length_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, ltrim, php_unicodestring_ustring_ltrim_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetExists, php_unicodestring_ustring_offsetExists_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetGet, php_unicodestring_ustring_offsetGet_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetSet, php_unicodestring_ustring_offsetSet_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, offsetUnset, php_unicodestring_ustring_offsetUnset_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, rtrim, php_unicodestring_ustring_rtrim_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, toLower, php_unicodestring_ustring_toLower_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, toUpper, php_unicodestring_ustring_toUpper_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, trim, php_unicodestring_ustring_trim_arginfo, ZEND_ACC_PUBLIC)
 
 	PHP_MALIAS(UString, set, __construct, php_unicodestring_ustring_construct_arginfo, ZEND_ACC_PUBLIC)
 	PHP_MALIAS(UString, strlen, length, php_unicodestring_ustring_length_arginfo, ZEND_ACC_PUBLIC)
@@ -521,6 +537,46 @@ PHP_METHOD(UString, htmlspecialchars_decode) {
 	php_ustring_html_entity_decode(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0);
 }
 
+PHP_METHOD(UString, ltrim) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+	zval *charlist = NULL;
+	UString cl;
+	std::set<UChar32> charset;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &charlist) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (charlist) {
+		if (!ustring_parse_stringy_zval(charlist, cl TSRMLS_CC)) {
+			php_error(E_WARNING, "Character list must be a string or UString object");
+			RETURN_FALSE;
+		}
+	} else {
+		cl.set(" \t\r\n\0\x0b", sizeof(" \t\r\n\0\x0b"), "ISO-8859-1");
+	}
+
+
+	if (intern->ustr->length() == 0) {
+		ustring_create_object(return_value);
+		return;
+	}
+
+	for (size_t i = 0; i < cl.length(); i++) {
+		charset.insert(cl.charAt(i));
+	}
+
+	size_t pos = 0;
+	for (; pos < intern->ustr->length(); pos++) {
+		if (!charset.count(intern->ustr->charAt(pos))) {
+			break;
+		}
+	}
+
+	ustring_create_object(return_value, intern->ustr->substring(pos));
+}
+
 PHP_METHOD(UString, length) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
@@ -615,6 +671,46 @@ PHP_METHOD(UString, offsetUnset) {
 	}
 }
 
+PHP_METHOD(UString, rtrim) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+	zval *charlist = NULL;
+	UString cl;
+	std::set<UChar32> charset;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &charlist) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (charlist) {
+		if (!ustring_parse_stringy_zval(charlist, cl TSRMLS_CC)) {
+			php_error(E_WARNING, "Character list must be a string or UString object");
+			RETURN_FALSE;
+		}
+	} else {
+		cl.set(" \t\r\n\0\x0b", sizeof(" \t\r\n\0\x0b"), "ISO-8859-1");
+	}
+
+
+	if (intern->ustr->length() == 0) {
+		ustring_create_object(return_value);
+		return;
+	}
+
+	for (size_t i = 0; i < cl.length(); i++) {
+		charset.insert(cl.charAt(i));
+	}
+
+	size_t pos = intern->ustr->length() - 1;
+	for (; pos >= 0; pos--) {
+		if (!charset.count(intern->ustr->charAt(pos))) {
+			break;
+		}
+	}
+
+	ustring_create_object(return_value, intern->ustr->substring(0, pos + 1));
+}
+
 PHP_METHOD(UString, toLower) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
@@ -627,6 +723,53 @@ PHP_METHOD(UString, toUpper) {
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 
 	ustring_create_object(return_value, intern->ustr->toUpper());
+}
+
+PHP_METHOD(UString, trim) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+	zval *charlist = NULL;
+	UString cl, out;
+	std::set<UChar32> charset;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &charlist) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (charlist) {
+		if (!ustring_parse_stringy_zval(charlist, cl TSRMLS_CC)) {
+			php_error(E_WARNING, "Character list must be a string or UString object");
+			RETURN_FALSE;
+		}
+	} else {
+		cl.set(" \t\r\n\0\x0b", sizeof(" \t\r\n\0\x0b"), "ISO-8859-1");
+	}
+
+
+	if (intern->ustr->length() == 0) {
+		ustring_create_object(return_value);
+		return;
+	}
+
+	for (size_t i = 0; i < cl.length(); i++) {
+		charset.insert(cl.charAt(i));
+	}
+
+	size_t pos = intern->ustr->length() - 1;
+	for (; pos >= 0; pos--) {
+		if (!charset.count(intern->ustr->charAt(pos))) {
+			break;
+		}
+	}
+	out = intern->ustr->substring(0, pos + 1);
+
+	for (pos = 0; pos < out.length(); pos++) {
+		if (!charset.count(out.charAt(pos))) {
+			break;
+		}
+	}
+
+	ustring_create_object(return_value, out.substring(pos));
 }
 
 // vim: set ai cin noet ts=8 sw=8:

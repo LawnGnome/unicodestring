@@ -40,12 +40,15 @@ extern "C" {
 	PHP_METHOD(UString, html_entity_decode);
 	PHP_METHOD(UString, htmlspecialchars_decode);
 	PHP_METHOD(UString, length);
+	PHP_METHOD(UString, ltrim);
 	PHP_METHOD(UString, offsetExists);
 	PHP_METHOD(UString, offsetGet);
 	PHP_METHOD(UString, offsetSet);
 	PHP_METHOD(UString, offsetUnset);
+	PHP_METHOD(UString, rtrim);
 	PHP_METHOD(UString, toLower);
 	PHP_METHOD(UString, toUpper);
+	PHP_METHOD(UString, trim);
 
 	void register_unicodestring_ustring(TSRMLS_D);
 }
