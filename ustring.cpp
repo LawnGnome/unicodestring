@@ -298,7 +298,7 @@ PHP_METHOD(UString, encode) {
 	}
 }
 
-PHP_METHOD(UString, htmlentities) {
+static void php_ustring_html_entities(INTERNAL_FUNCTION_PARAMETERS, int all) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 	long flags = ENT_COMPAT;
@@ -315,7 +315,7 @@ PHP_METHOD(UString, htmlentities) {
 #else
 		int outputSize = 0;
 #endif
-		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, 1, flags, "UTF-8", 0 TSRMLS_CC);
+		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, all, flags, "UTF-8", 0 TSRMLS_CC);
 
 		Z_TYPE_P(return_value) = IS_OBJECT;
 		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
@@ -330,36 +330,12 @@ PHP_METHOD(UString, htmlentities) {
 	}
 }
 
+PHP_METHOD(UString, htmlentities) {
+	php_ustring_html_entities(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1);
+}
+
 PHP_METHOD(UString, htmlspecialchars) {
-	zval *obj = getThis();
-	ustring_obj *intern = getIntern(obj TSRMLS_CC);
-	long flags = ENT_COMPAT;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &flags) == FAILURE) {
-		RETURN_FALSE;
-	}
-
-	try {
-		std::string utf8(intern->ustr->toUTF8());
-		unsigned char *utf8Buffer = (unsigned char *) estrndup(utf8.c_str(), utf8.size());
-#if PHP_API_VERSION > 20090626
-		size_t outputSize = 0;
-#else
-		int outputSize = 0;
-#endif
-		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, 0, flags, "UTF-8", 0 TSRMLS_CC);
-
-		Z_TYPE_P(return_value) = IS_OBJECT;
-		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-		zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
-		getIntern(return_value)->ustr->set(output, outputSize, "UTF-8");
-
-		efree(utf8Buffer);
-		efree(output);
-	} catch (ConversionError e) {
-		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, "%s", e.what());
-	}
+	php_ustring_html_entities(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0);
 }
 
 PHP_METHOD(UString, length) {
