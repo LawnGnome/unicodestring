@@ -64,6 +64,7 @@ class UString {
 		UString replace(const UString &needle, const UString &replacement) const;
 		void remove(size_t offset);
 		UString reverse() const;
+		size_t rfind(const UString &needle) const;
 		void set(const char *buffer, size_t length, const char *charset);
 		void set(const UChar32 *buffer, size_t length);
 		void setCharAt(size_t offset, const UString &src);

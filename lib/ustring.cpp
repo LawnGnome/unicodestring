@@ -149,6 +149,16 @@ UString UString::reverse() const {
 	return reversed;
 }
 
+size_t UString::rfind(const UString &needle) const {
+    UStringData::const_iterator pos = std::find_end(data.begin(), data.end(), needle.data.begin(), needle.data.end());
+
+	if (pos == data.end()) {
+		throw NotFoundError("Search string not found");
+	}
+
+	return pos - data.begin();
+}
+
 void UString::set(const char *buffer, size_t length, const char *charset) {
 	assert(buffer != NULL);
 	assert(charset != NULL);

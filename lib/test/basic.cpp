@@ -177,6 +177,18 @@ class ReverseTest : public Test {
 		}
 };
 
+class RFindTest : public Test {
+	public:
+		void run(TestRunner &runner) {
+			UString haystack("quick quick", 11, "ISO-8859-1");
+			UString needle("ui", 2, "ISO-8859-1");
+			UString notFound("foo", 3, "ISO-8859-1");
+
+			ASSERT(runner, 7, haystack.rfind(needle), "RFind");
+			ASSERT_EXCEPTION(runner, NotFoundError, haystack.find(notFound), "RFind non-existent value");
+		}
+};
+
 class SetCharAtTest : public Test {
 	public:
 		void run(TestRunner &runner) {
@@ -250,6 +262,7 @@ int main() {
 	RemoveTest().run(runner);
 	ReplaceTest().run(runner);
 	ReverseTest().run(runner);
+	RFindTest().run(runner);
 	SetCharAtTest().run(runner);
 	SubstringTest().run(runner);
 	ToEncodingTest().run(runner);
