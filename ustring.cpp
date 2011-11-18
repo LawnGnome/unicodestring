@@ -53,10 +53,8 @@ static void ustring_set(ustring_obj *intern, const char *str, int len, const cha
 		zend_call_method_with_2_params(&exception, unicodestring_InvalidInputException, &unicodestring_InvalidInputException->constructor, "__construct", NULL, &zvalInput, &zvalCharset);
 
 		zend_throw_exception_object(exception TSRMLS_CC);
-
-		zend_throw_exception_ex(unicodestring_InvalidInputException, 0 TSRMLS_CC, "%s", e.what());
 	} catch (NormalisationError e) {
-		php_error(E_ERROR, e.what());
+		php_error(E_ERROR, "%s", e.what());
 	}
 }
 
@@ -174,7 +172,8 @@ int php_unicodestring_ustring_cast_object(zval *src, zval *dst, int type TSRMLS_
 	try {
 		utf8 = intern->ustr->toUTF8();
 	} catch (ConversionError e) {
-		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, "%s", e.what());
+		char format[] = "%s";
+		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, format, e.what());
 	}
 
 	INIT_PZVAL(dst);
@@ -294,7 +293,8 @@ PHP_METHOD(UString, encode) {
 		std::string encoded(intern->ustr->toEncoding(charset));
 		RETURN_STRINGL(encoded.c_str(), encoded.size(), 1);
 	} catch (ConversionError e) {
-		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, "Error converting string to charset %s: %s", charset, e.what());
+		char format[] = "Error converting string to charset %s: %s";
+		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, format, charset, e.what());
 	}
 }
 
@@ -315,7 +315,8 @@ static void php_ustring_html_entities(INTERNAL_FUNCTION_PARAMETERS, int all) {
 #else
 		int outputSize = 0;
 #endif
-		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, all, flags, "UTF-8", 0 TSRMLS_CC);
+		char charset[] = "UTF-8";
+		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, all, flags, charset, 0 TSRMLS_CC);
 
 		Z_TYPE_P(return_value) = IS_OBJECT;
 		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
@@ -326,7 +327,8 @@ static void php_ustring_html_entities(INTERNAL_FUNCTION_PARAMETERS, int all) {
 		efree(utf8Buffer);
 		efree(output);
 	} catch (ConversionError e) {
-		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, "%s", e.what());
+		char format[] = "%s";
+		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, format, e.what());
 	}
 }
 
@@ -381,11 +383,14 @@ PHP_METHOD(UString, offsetGet) {
 
 		return_value_intern->ustr->set(&ch, 1);
 	} catch (std::out_of_range e) {
-		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+		char format[] = "Index %d is out of range";
+		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, format, index);
 	} catch (MalformedInput e) {
-		zend_throw_exception_ex(unicodestring_InternalException, 0 TSRMLS_CC, "%s", e.what());
+		char format[] = "%s";
+		zend_throw_exception_ex(unicodestring_InternalException, 0 TSRMLS_CC, format, e.what());
 	} catch (NormalisationError e) {
-		zend_throw_exception_ex(unicodestring_InternalException, 0 TSRMLS_CC, "%s", e.what());
+		char format[] = "%s";
+		zend_throw_exception_ex(unicodestring_InternalException, 0 TSRMLS_CC, format, e.what());
 	}
 }
 
@@ -411,7 +416,8 @@ PHP_METHOD(UString, offsetSet) {
 		}
 	}
 	else {
-		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+		char format[] = "Index %d is out of range";
+		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, format, index);
 	}
 }
 
@@ -428,7 +434,8 @@ PHP_METHOD(UString, offsetUnset) {
 		intern->ustr->remove(index);
 	}
 	else {
-		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, "Index %d is out of range", index);
+		char format[] = "Index %d is out of range";
+		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, format, index);
 	}
 }
 
