@@ -269,20 +269,20 @@ void register_unicodestring_ustring(TSRMLS_C) {
 // Methods.
 PHP_METHOD(UString, __construct) {
 	char *string = NULL, *charset = NULL;
-	int stringLen = 0, charsetLen = 0;
+	int stringSize = 0, charsetSize = 0;
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|ss", &string, &stringLen, &charset, &charsetLen) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|ss", &string, &stringSize, &charset, &charsetSize) == FAILURE) {
 		RETURN_FALSE;
 	}
 
 	if (string) {
 		if (charset) {
-			ustring_set(intern, string, stringLen, charset TSRMLS_CC);
+			ustring_set(intern, string, stringSize, charset TSRMLS_CC);
 		}
 		else {
-			ustring_set(intern, string, stringLen, "UTF-8" TSRMLS_CC);
+			ustring_set(intern, string, stringSize, "UTF-8" TSRMLS_CC);
 		}
 	}
 	else {
@@ -314,9 +314,9 @@ PHP_METHOD(UString, encode) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 	char *charset = NULL;
-	int charsetLen = 0;
+	int charsetSize = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &charset, &charsetLen) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &charset, &charsetSize) == FAILURE) {
 		RETURN_FALSE;
 	}
 
