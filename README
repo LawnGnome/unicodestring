@@ -1,0 +1,51 @@
+unicodestring pre-alpha
+Adam Harvey <aharvey@php.net>
+@LGnome
+
+Licence: MIT
+
+Building:
+    - Requires PHP 5.3 or later
+    - You will need libicu and a PHP development environment (php5-dev on Debian/Ubuntu)
+    - After that: phpize; ./configure --enable-unicodestring; make; sudo make install
+    - Add "extension=unicodestring.so" to php.ini
+    - Restart PHP
+    - Pray
+
+Constructors:
+    new unicodestring\UString()
+        empty string
+
+    new unicodestring\UString(string $string, string $charset = 'UTF-8')
+        assumes UTF-8
+
+Casting to string results in a UTF-8 string.
+
+Array access accesses individual codepoints.
+
+UString Methods:
+    static UString chr(int $codepoint)
+
+    string encode(string $charset = 'UTF-8')
+
+    UString[] explode(string $delimiter, [int $limit])
+
+    UString htmlentities(int $flags)
+
+    UString htmlspecialchars(int $flags)
+
+    UString html_entity_decode(int $flags)
+
+    UString htmlspecialchars_decode(int $flags)
+
+    int length()
+
+    UString ltrim(UString $charlist = " \r\n\t\0\x0b")
+
+    UString rtrim(UString $charlist = " \r\n\t\0\x0b")
+
+    UString toLower()
+
+    UString toUpper()
+
+    UString trim(UString $charlist = " \r\n\t\0\x0b")
