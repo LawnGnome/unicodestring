@@ -1,6 +1,7 @@
 #include "php_unicodestring.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 
@@ -56,6 +57,27 @@ static void ustring_create_object(zval *zv, const UString &us) {
 	*(getIntern(zv)->ustr) = us;
 }
 
+static bool ustring_parse_stringy_zval(zval *zv, UString &us TSRMLS_DC) {
+	switch (Z_TYPE_P(zv)) {
+		case IS_LONG:
+		case IS_DOUBLE:
+		case IS_BOOL:
+			convert_to_string(zv);
+			
+		case IS_STRING:
+			us.set(Z_STRVAL_P(zv), Z_STRLEN_P(zv), "UTF-8");
+			return true;
+
+		case IS_OBJECT:
+			if (instanceof_function(Z_OBJCE_P(zv), unicodestring_UString TSRMLS_CC)) {
+				us = *(getIntern(zv)->ustr);
+				return true;
+			}
+	}
+
+	return false;
+}
+
 // Helper function to set the UnicodeString in a ustring_obj.
 static void ustring_set(ustring_obj *intern, const char *str, int len, const char *charset TSRMLS_DC) {
 	try {
@@ -99,6 +121,11 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_encode_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, charset)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_explode_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, delimiter)
+	ZEND_ARG_INFO(0, limit)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(php_unicodestring_ustring_htmlentities_arginfo, 0, 0, 0)
@@ -149,6 +176,7 @@ static zend_function_entry ustring_functions[] = {
 
 	PHP_ME(UString, chr, php_unicodestring_ustring_chr_arginfo, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
 	PHP_ME(UString, encode, php_unicodestring_ustring_encode_arginfo, ZEND_ACC_PUBLIC)
+	PHP_ME(UString, explode, php_unicodestring_ustring_explode_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, htmlentities, php_unicodestring_ustring_htmlentities_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, htmlspecialchars, php_unicodestring_ustring_htmlspecialchars_arginfo, ZEND_ACC_PUBLIC)
 	PHP_ME(UString, html_entity_decode, php_unicodestring_ustring_html_entity_decode_arginfo, ZEND_ACC_PUBLIC)
@@ -344,6 +372,76 @@ PHP_METHOD(UString, encode) {
 	} catch (ConversionError e) {
 		char format[] = "Error converting string to charset %s: %s";
 		zend_throw_exception_ex(unicodestring_ConversionException, 0 TSRMLS_CC, format, charset, e.what());
+	}
+}
+
+PHP_METHOD(UString, explode) {
+	zval *obj = getThis();
+	ustring_obj *intern = getIntern(obj TSRMLS_CC);
+	zval *delimiter = NULL;
+	long limit = LONG_MAX;
+	UString delim;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|l", &delimiter, &limit) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	if (!ustring_parse_stringy_zval(delimiter, delim TSRMLS_CC)) {
+		php_error(E_WARNING, "Delimiter must be a string or UString object");
+		RETURN_FALSE;
+	}
+
+	if (delim.length() == 0) {
+		php_error(E_WARNING, "Empty delimiter");
+		RETURN_FALSE;
+	}
+
+	array_init(return_value);
+
+	if (limit > 1 || limit < 0) {
+		size_t i = 1;
+		size_t loopLimit = limit > 0 ? limit : LONG_MAX;
+		size_t pos = 0;
+		size_t length = intern->ustr->length();
+
+		for (; i < loopLimit && pos < length; i++) {
+			zval *zv;
+			MAKE_STD_ZVAL(zv);
+
+			try {
+				UString chunk(intern->ustr->substring(pos));
+				size_t inc = chunk.find(delim);
+				
+				ustring_create_object(zv, chunk.substring(0, inc));
+				add_next_index_zval(return_value, zv);
+
+				pos += inc + delim.length();
+			}
+			catch (NotFoundError e) {
+				ustring_create_object(zv, intern->ustr->substring(pos));
+				add_next_index_zval(return_value, zv);
+				break;
+			}
+		}
+
+		if (i >= loopLimit) {
+			zval *zv;
+			MAKE_STD_ZVAL(zv);
+
+			ustring_create_object(zv, intern->ustr->substring(pos));
+			add_next_index_zval(return_value, zv);
+		}
+
+		if (limit < 0) {
+			for (size_t j = i + limit; j < i; j++) {
+				zend_hash_index_del(Z_ARRVAL_P(return_value), j);
+			}
+		}
+	} else {
+		zval *zv;
+		MAKE_STD_ZVAL(zv);
+		ustring_create_object(zv, *intern->ustr);
+		add_next_index_zval(return_value, zv);
 	}
 }
 
