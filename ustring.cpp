@@ -35,6 +35,27 @@ inline static ustring_obj *getIntern(zval *obj TSRMLS_DC) {
 	return (ustring_obj *) zend_object_store_get_object(obj TSRMLS_CC);
 }
 
+static void ustring_create_object(zval *zv) {
+	Z_TYPE_P(zv) = IS_OBJECT;
+	object_init_ex(zv, unicodestring_UString TSRMLS_CC);
+
+	zend_call_method_with_0_params(&zv, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
+}
+
+static void ustring_create_object(zval *zv, const char *data, size_t length, const char *charset) {
+	ustring_create_object(zv);
+	getIntern(zv)->ustr->set(data, length, charset);
+}
+
+static void ustring_create_object(zval *zv, const char *data, size_t length) {
+	ustring_create_object(zv, data, length, "UTF-8");
+}
+
+static void ustring_create_object(zval *zv, const UString &us) {
+	ustring_create_object(zv);
+	*(getIntern(zv)->ustr) = us;
+}
+
 // Helper function to set the UnicodeString in a ustring_obj.
 static void ustring_set(ustring_obj *intern, const char *str, int len, const char *charset TSRMLS_DC) {
 	try {
@@ -303,10 +324,7 @@ PHP_METHOD(UString, chr) {
 	}
 
 	cp32 = (UChar32) codepoint;
-	Z_TYPE_P(return_value) = IS_OBJECT;
-	object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
+	ustring_create_object(return_value);
 	getIntern(return_value)->ustr->set(&cp32, 1);
 }
 
@@ -349,11 +367,7 @@ static void php_ustring_html_entities(INTERNAL_FUNCTION_PARAMETERS, int all) {
 		char charset[] = "UTF-8";
 		char *output = php_escape_html_entities_ex(utf8Buffer, utf8.size(), &outputSize, all, flags, charset, 0 TSRMLS_CC);
 
-		Z_TYPE_P(return_value) = IS_OBJECT;
-		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-		zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
-		getIntern(return_value)->ustr->set(output, outputSize, "UTF-8");
+		ustring_create_object(return_value, output, outputSize);
 
 		efree(utf8Buffer);
 		efree(output);
@@ -391,11 +405,7 @@ static void php_ustring_html_entity_decode(INTERNAL_FUNCTION_PARAMETERS, int all
 		char charset[] = "UTF-8";
 		char *output = php_unescape_html_entities(utf8Buffer, utf8.size(), &outputSize, all, flags, charset TSRMLS_CC);
 
-		Z_TYPE_P(return_value) = IS_OBJECT;
-		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-		zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
-		getIntern(return_value)->ustr->set(output, outputSize, "UTF-8");
+		ustring_create_object(return_value, output, outputSize);
 
 		efree(utf8Buffer);
 		efree(output);
@@ -448,13 +458,8 @@ PHP_METHOD(UString, offsetGet) {
 		INIT_ZVAL(blank);
 		ZVAL_STRING(&blank, "", 0);
 
-		Z_TYPE_P(return_value) = IS_OBJECT;
-		object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-		zend_call_method_with_1_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL, &blank);
-		ustring_obj *return_value_intern = getIntern(return_value);
-
-		return_value_intern->ustr->set(&ch, 1);
+		ustring_create_object(return_value);
+		getIntern(return_value)->ustr->set(&ch, 1);
 	} catch (std::out_of_range e) {
 		char format[] = "Index %d is out of range";
 		zend_throw_exception_ex(unicodestring_OutOfRangeException, 0 TSRMLS_CC, format, index);
@@ -516,22 +521,14 @@ PHP_METHOD(UString, toLower) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 
-	Z_TYPE_P(return_value) = IS_OBJECT;
-	object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
-	*(getIntern(return_value)->ustr) = intern->ustr->toLower();
+	ustring_create_object(return_value, intern->ustr->toLower());
 }
 
 PHP_METHOD(UString, toUpper) {
 	zval *obj = getThis();
 	ustring_obj *intern = getIntern(obj TSRMLS_CC);
 
-	Z_TYPE_P(return_value) = IS_OBJECT;
-	object_init_ex(return_value, unicodestring_UString TSRMLS_CC);
-
-	zend_call_method_with_0_params(&return_value, unicodestring_UString, &unicodestring_UString->constructor, "__construct", NULL);
-	*(getIntern(return_value)->ustr) = intern->ustr->toUpper();
+	ustring_create_object(return_value, intern->ustr->toUpper());
 }
 
 // vim: set ai cin noet ts=8 sw=8:
